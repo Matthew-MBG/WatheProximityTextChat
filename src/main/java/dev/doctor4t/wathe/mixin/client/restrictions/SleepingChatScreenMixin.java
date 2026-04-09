@@ -3,6 +3,7 @@ package dev.doctor4t.wathe.mixin.client.restrictions;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import dev.doctor4t.wathe.client.WatheClient;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.gui.screen.SleepingChatScreen;
@@ -25,7 +26,7 @@ public abstract class SleepingChatScreenMixin extends ChatScreen {
 
     @WrapMethod(method = "render")
     public void wathe$disableSleepChat(DrawContext context, int mouseX, int mouseY, float delta, Operation<Void> original) {
-        if (!WatheClient.isPlayerAliveAndInSurvival()) {
+        if (!WatheClient.isPlayerAliveAndInSurvival() || FabricLoader.getInstance().isModLoaded("proximity")) {
             original.call(context, mouseX, mouseY, delta);
         }
     }
@@ -37,15 +38,20 @@ public abstract class SleepingChatScreenMixin extends ChatScreen {
 
     @WrapMethod(method = "charTyped")
     public boolean wathe$disableCharTyping(char chr, int modifiers, Operation<Boolean> original) {
+        if (FabricLoader.getInstance().isModLoaded("proximity")) {
+            return original.call(chr, modifiers);
+        }
         return false;
     }
 
     @WrapMethod(method = "keyPressed")
     public boolean wathe$disableKeyPressed(int keyCode, int scanCode, int modifiers, Operation<Boolean> original) {
+        if (FabricLoader.getInstance().isModLoaded("proximity")) {
+            return original.call(keyCode, scanCode, modifiers);
+        }
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             this.stopSleeping();
         }
-
         return false;
     }
 
